@@ -13,8 +13,6 @@ const uint8_t DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DIR_PIN);
 
-const float DXL_PROTOCOL_VERSION = 2.0;
-
 struct vector3D
 {
   int x;
