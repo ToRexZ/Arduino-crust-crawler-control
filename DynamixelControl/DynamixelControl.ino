@@ -5,7 +5,6 @@
 #include <math.h>
 
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560) // When using DynamixelShield
-#include <SoftwareSerial.h>
 #define DXL_SERIAL Serial
 #define DEBUG_SERIAL Serial3
 const uint8_t DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
@@ -22,7 +21,7 @@ struct vector3D
 
 vector3D endEffectorPosition;
 
-const int l1 = 0;
+const int l1 = 66; //Length in mm
 const int l2 = 220;
 const int l3 = 147;
 
@@ -42,6 +41,23 @@ void forwardKinematics(vector3D &eePosition)
   eePosition.y = l2 * sin(theta2 - M_PI_2) + l3 * sin(theta2 - M_PI_2 + theta3 - M_PI);
 }
 
+class Controller
+{
+public:
+private:
+};
+
+class Joint
+{
+public:
+private:
+};
+
+double getJointAngle(uint8_t &&id, enum ParamUnit unit)
+{
+  return dxl.getPresentPosition(id, unit);
+}
+
 void setup()
 {
   // DXL_SERIAL.begin(115200);
@@ -51,22 +67,36 @@ void setup()
   }
   dxl.begin(57600);
 
+  dxl.torqueOff(1);
+  dxl.writeControlTableItem(ControlTableItem::HOMING_OFFSET, 1, -1023);
+
   for (size_t i = 1; i < 6; i++)
   {
     dxl.torqueOff(i);
-    dxl.setOperatingMode(i, OperatingMode::OP_POSITION);
+    // dxl.setOperatingMode(i, OperatingMode::OP_POSITION);
     dxl.writeControlTableItem(ControlTableItem::MOVING_THRESHOLD, i, 1);
     dxl.writeControlTableItem(ControlTableItem::HOMING_OFFSET, i, 0);
     dxl.torqueOn(i);
   }
-  dxl.torqueOff(2);
-  dxl.torqueOff(3);
 }
 
 void loop()
 {
-  forwardKinematics(endEffectorPosition);
-  DEBUG_SERIAL.print(endEffectorPosition.x);
-  DEBUG_SERIAL.print(" ; ");
-  DEBUG_SERIAL.println(endEffectorPosition.y);
+  // forwardKinematics(endEffectorPosition);
+  // DEBUG_SERIAL.print(endEffectorPosition.x);
+  // DEBUG_SERIAL.print(" ; ");
+  // DEBUG_SERIAL.println(endEffectorPosition.y);
+  DEBUG_SERIAL.print("1: ");
+  DEBUG_SERIAL.println(getJointAngle(1, UNIT_RAW));
+  DEBUG_SERIAL.print("2: ");
+  DEBUG_SERIAL.println(dxl.getPresentPosition(2, UNIT_RAW));
+  DEBUG_SERIAL.print("3: ");
+  DEBUG_SERIAL.println(dxl.getPresentPosition(3, UNIT_RAW));
+  DEBUG_SERIAL.println();
+
+  dxl.setGoalPosition(1, 0, UNIT_RAW);
+  dxl.setGoalPosition(2, 0, UNIT_RAW);
+  dxl.setGoalPosition(3, 0, UNIT_RAW);
+  // DEBUG_SERIAL.println(dxl.getPresentPosition(4,UNIT_DEGREE));
+  delay(100);
 }
