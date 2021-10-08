@@ -50,7 +50,6 @@ void setup()
   {
   }
   dxl.begin(57600);
-  dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
 
   for (size_t i = 1; i < 6; i++)
   {
