@@ -41,18 +41,6 @@ void forwardKinematics(vector3D &eePosition)
   eePosition.y = l2 * sin(theta2 - M_PI_2) + l3 * sin(theta2 - M_PI_2 + theta3 - M_PI);
 }
 
-class Controller
-{
-public:
-private:
-};
-
-class Joint
-{
-public:
-private:
-};
-
 double getJointAngle(uint8_t &&id, enum ParamUnit unit)
 {
   return dxl.getPresentPosition(id, unit);
