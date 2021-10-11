@@ -1,0 +1,82 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\mega"
+  },
+  {
+    "Sourcefile": "c:\\Users\\alexander\\Desktop\\Codeopgaver\\CrustCrawler\\build\\sketch\\Controller.cpp.cpp",
+    "Include": "Dynamixel2Arduino.h",
+    "Includepath": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\alexander\\Desktop\\Codeopgaver\\CrustCrawler\\build\\sketch\\Controller.cpp.cpp",
+    "Include": "DynamixelShield.h",
+    "Includepath": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\DynamixelShield\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\alexander\\Desktop\\Codeopgaver\\CrustCrawler\\build\\sketch\\Controller.cpp.cpp",
+    "Include": "SoftwareSerial.h",
+    "Includepath": "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\SoftwareSerial\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\alexander\\Desktop\\Codeopgaver\\CrustCrawler\\build\\sketch\\Controller.cpp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\alexander\\Desktop\\Codeopgaver\\CrustCrawler\\build\\sketch\\Joints.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src\\Dynamixel2Arduino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src\\actuator.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src\\dxl_c\\protocol.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src\\utility\\master.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src\\utility\\port_handler.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\Dynamixel2Arduino\\src\\utility\\slave.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\DynamixelShield\\src\\DynamixelShield.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\alexander\\Documents\\Arduino\\libraries\\DynamixelShield\\src\\util\\RobotisRemoteController.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\SoftwareSerial\\src\\SoftwareSerial.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
