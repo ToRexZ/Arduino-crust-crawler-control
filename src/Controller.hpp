@@ -13,14 +13,9 @@
 #include <ElementStorage.h>
 
 // Custom headers
-#include "Joints.hpp"
+#include "DataStructures.hpp"
 #include "PerformanceTester.hpp"
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> b1e871d84ba9c20168e7c3a29d355d045b9a4e60
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560) // When using DynamixelShield
 #include <SoftwareSerial.h>
 #define DYNAMIXEL_SERIAL Serial
@@ -28,15 +23,15 @@
 const uint8_t DIRECTION_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
 
-struct eePosition
-{
-    int x{0}, y{0}, z{0};
-};
+enum UnitType{
+        Degree,
+        Radians
+    };
 
 class Controller
 {
 public:
-    Controller();
+    Controller(const bool rads);
     ~Controller();
 
     void SetGoalPosition();
@@ -50,6 +45,7 @@ private:
     void _UpdateFingerThetas();
 
     // Kinematics
+    JointAngles _ThetaConverter(UnitType unit);
     void _ForwardKinematics();
     void _InverseKinematics();
 
@@ -63,15 +59,18 @@ private:
     // General private objects or variables
     Dynamixel2Arduino* p_dynamixel = NULL;
 
+    Joints m_Joints[5];
+
     const int l1{66}, l2{220}, l3{147};
 
-    double theta1_raw, theta2_raw, theta3_raw, theta4_raw, theta5_raw;
-    double theta1_deg, theta2_deg, theta3_deg, theta4_deg, theta5_deg;
+    double theta1, theta2, theta3, theta4, theta5;
     eePosition m_eePosition;
+
+    bool m_rads;
 
 public:
     void debugPrint();
-    
+
 };
 
 #endif
