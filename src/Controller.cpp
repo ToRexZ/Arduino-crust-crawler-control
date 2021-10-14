@@ -1,7 +1,8 @@
 #include "Controller.hpp"
 
-Controller::Controller()
+Controller::Controller(bool &rads)
 {
+    rads = *rads;
     DEBUG_SERIAL.begin(115200);
     while (!DEBUG_SERIAL)
     {
@@ -18,7 +19,6 @@ Controller::Controller()
         p_dynamixel->writeControlTableItem(ControlTableItem::PWM_LIMIT, i, 600);
         p_dynamixel->torqueOn(i);
     }
-    
 }
 
 Controller::~Controller()
@@ -26,7 +26,8 @@ Controller::~Controller()
     delete p_dynamixel;
 }
 
-void Controller::_UpdateChain(){
+void Controller::_UpdateChain()
+{
     _UpdateArmThetas();
     _ForwardKinematics();
     _InverseKinematics();
@@ -34,7 +35,8 @@ void Controller::_UpdateChain(){
     _InverseDynamics();
 }
 
-void Controller::SetGoalPosition(){
+void Controller::SetGoalPosition()
+{
     int a = 10;
 }
 
@@ -78,11 +80,18 @@ void Controller::debugPrint(){
     
     }
 
-void Controller::_ForwardKinematics(){
+void Controller::_ForwardKinematics()
+{
     _UpdateArmThetas();
+<<<<<<< HEAD
     m_eePosition.x = -cos(theta1_deg)*(l3*sin(theta2_deg+theta3_deg)+l2*sin(theta2_deg));
     m_eePosition.y = -sin(theta1_deg)*(l3*sin(theta2_deg+theta3_deg)+l2*sin(theta2_deg));
     m_eePosition.z = l1+l3*cos(theta2_deg+theta3_deg)+l2*cos(theta2_deg);
+=======
+    m_eePosition.x = -cos(theta1) * (l3 * sin(theta2 + theta3) + l2 * sin(theta2));
+    m_eePosition.y = -sin(theta1) * (l3 * sin(theta2 + theta3) + l2 * sin(theta2));
+    m_eePosition.z = l1 + l3 * cos(theta2 + theta3) + l2 * cos(theta2);
+>>>>>>> b1e871d84ba9c20168e7c3a29d355d045b9a4e60
 }
 
 void Controller::PID_PWM(uint8_t id, int16_t desired_angle, double Kp, double Ki, double Kd){

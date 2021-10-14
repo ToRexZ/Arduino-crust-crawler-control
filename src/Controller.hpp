@@ -16,8 +16,11 @@
 #include "Joints.hpp"
 #include "PerformanceTester.hpp"
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> b1e871d84ba9c20168e7c3a29d355d045b9a4e60
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560) // When using DynamixelShield
 #include <SoftwareSerial.h>
 #define DYNAMIXEL_SERIAL Serial
