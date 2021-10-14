@@ -11,7 +11,6 @@
 
 #include "PerformanceTester.hpp"
 
-
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560) // When using DynamixelShield
 #include <SoftwareSerial.h>
 #define DYNAMIXEL_SERIAL Serial
@@ -38,15 +37,15 @@ private:
     void _UpdateArmThetas();
     void _UpdateFingerThetas();
 
-    
     void _InverseKinematics();
     void _ForwardDynamics();
     void _InverseDynamics();
 
-    Dynamixel2Arduino* p_dynamixel = NULL;
+    Dynamixel2Arduino *p_dynamixel = NULL;
 
     const int l1{66}, l2{220}, l3{147};
     double theta1, theta2, theta3, theta4, theta5;
+    const bool rads;
 
     eePosition m_eePosition;
 

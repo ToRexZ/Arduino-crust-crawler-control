@@ -2,7 +2,7 @@
 #include "Dynamixel2Arduino.h"
 #include "DynamixelShield.h"
 
-Controller* controller;
+Controller *controller;
 
 #include <math.h>
 
@@ -32,6 +32,9 @@ struct Joint
 
 vector3D endEffectorPosition;
 
+//Calculate with radians[true] or degrees[false];
+const bool rads = false;
+
 const int l1 = 66; //Length in mm
 const int l2 = 220;
 const int l3 = 147;
@@ -58,30 +61,22 @@ double PID_PWM(uint8_t id, int16_t desired_raw_angle, double Kp = 0, double Ki =
   return abs(sum) > limit ? copysign(limit, sum) : sum;
 }
 
-
-
-void setup(){
-    controller = new Controller();
+void setup()
+{
+  controller = new Controller(&rads);
 }
 
-void loop(){
-    controller->debugPrint();
-    delay(30);
+void loop()
+{
+  controller->debugPrint();
+  delay(30);
 
-    temp_PID = PID_PWM(4, 4096 / 2, 2, 0.9, 2.5);
-    dxl.setGoalPWM(4, temp_PID, UNIT_RAW);
-    DEBUG_SERIAL.print("Error: ");
-    DEBUG_SERIAL.print(last_error);
-    DEBUG_SERIAL.print("       PID: ");
-    DEBUG_SERIAL.print(temp_PID);
-    DEBUG_SERIAL.print("       Integral: ");
-    DEBUG_SERIAL.println(integral);
+  temp_PID = PID_PWM(4, 4096 / 2, 2, 0.9, 2.5);
+  dxl.setGoalPWM(4, temp_PID, UNIT_RAW);
+  DEBUG_SERIAL.print("Error: ");
+  DEBUG_SERIAL.print(last_error);
+  DEBUG_SERIAL.print("       PID: ");
+  DEBUG_SERIAL.print(temp_PID);
+  DEBUG_SERIAL.print("       Integral: ");
+  DEBUG_SERIAL.println(integral);
 }
-
-
-
-
-
-
-
-
