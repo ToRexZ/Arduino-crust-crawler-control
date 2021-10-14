@@ -1,12 +1,10 @@
 #ifndef JOINTHPP
 #define JOINTHPP
 
-class Joints
+struct Joints
 {
-public:
-    Joints();
-    ~Joints();
-private:
+    int id;
+    
 };
 
 
