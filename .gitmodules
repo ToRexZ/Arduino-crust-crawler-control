@@ -1,0 +1,10 @@
+#Hvis man gerne vil inkludere submodulerne: git submodule update --init --recursive
+
+[submodule "Dynamixel2Arduino"]
+	path = libs/Dynamixel2Arduino
+	url = https://github.com/ROBOTIS-GIT/Dynamixel2Arduino.git
+
+[submodule "DynamixelShield"]
+	path = libs/DynamixelShield
+	url = https://github.com/ROBOTIS-GIT/DynamixelShield.git
+    
