@@ -27,7 +27,7 @@ Controller::~Controller()
 }
 
 void Controller::_UpdateChain(){
-    _UpdateThetas();
+    _UpdateArmThetas();
     _ForwardKinematics();
     _InverseKinematics();
     _ForwardDynamics();
@@ -70,7 +70,7 @@ void Controller::debugPrint(){
     }
 
 void Controller::_ForwardKinematics(){
-    _UpdateThetas();
+    _UpdateArmThetas();
     m_eePosition.x = -cos(theta1)*(l3*sin(theta2+theta3)+l2*sin(theta2));
     m_eePosition.y = -sin(theta1)*(l3*sin(theta2+theta3)+l2*sin(theta2));
     m_eePosition.z = l1+l3*cos(theta2+theta3)+l2*cos(theta2);
