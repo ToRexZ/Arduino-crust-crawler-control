@@ -7,7 +7,7 @@
 class PerformanceTester
 {
 private:
-    unsigned long startTime{0}, endTime{0}, elapsedTime{0};
+    unsigned long startTime, endTime, elapsedTime;
     HardwareSerial* m_debugMonitor;
 
 public:
@@ -26,7 +26,6 @@ PerformanceTester::~PerformanceTester()
 {
     endTime = millis();
     elapsedTime = endTime - startTime;
-    //m_debugMonitor->print("Function time: ");
     m_debugMonitor->print(elapsedTime);
     m_debugMonitor->print(" ms");
     m_debugMonitor->print("\n");

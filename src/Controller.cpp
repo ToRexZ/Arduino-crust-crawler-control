@@ -1,18 +1,17 @@
 #include "Controller.hpp"
 
-Controller::Controller(bool rads)
+Controller::Controller()
 {
-    m_rads = rads;
     DEBUG_SERIAL.begin(115200);
     while (!DEBUG_SERIAL)
     {
     }
     
-    m_Joints[1] = Joints(1, 10, 66, 10, 10);
-    m_Joints[2] = Joints(2, 10, 220, 10, 10);
-    m_Joints[3] = Joints(3, 10, 147, 10, 10);
-    m_Joints[4] = Joints(4, 10, 10, 10, 10);
-    m_Joints[5] = Joints(5, 10, 10, 10, 10);
+    m_Joint1 = Joints(1, 10, 6.6, -180, 180, 10);
+    m_Joint2 = Joints(2, 10, 22.0, 10, 10, 10);
+    m_Joint3 = Joints(3, 10, 14.7, 10, 10, 10);
+    m_Joint4 = Joints(4, 10, 10, 10, 10, 10);
+    m_Joint5 = Joints(5, 10, 10, 10, 10, 10);
 
     p_dynamixel = new Dynamixel2Arduino(DYNAMIXEL_SERIAL, DIRECTION_PIN);
     p_dynamixel->begin(57600);
@@ -25,6 +24,8 @@ Controller::Controller(bool rads)
         p_dynamixel->writeControlTableItem(ControlTableItem::PWM_LIMIT, i, 600);
         //p_dynamixel->torqueOn(i);
     }
+
+    m_currentTime = millis();
 }
 
 Controller::~Controller()
@@ -34,31 +35,209 @@ Controller::~Controller()
 
 void Controller::_UpdateChain()
 {
+    
     _UpdateArmThetas();
     _ForwardKinematics();
-    _InverseKinematics();
+    //_InverseKinematics();
     _ForwardDynamics();
     _InverseDynamics();
 }
 
-void Controller::SetGoalPosition()
-{
-    int a = 10;
+void Controller::_UpdateArmThetas(){    
+    inputArmThetas.m_Theta1 = p_dynamixel->getPresentPosition(1, UNIT_RAW);
+    inputArmThetas.m_Theta2 = p_dynamixel->getPresentPosition(2, UNIT_RAW);
+    inputArmThetas.m_Theta3 = p_dynamixel->getPresentPosition(3, UNIT_RAW);
+    inputArmThetas.currentUnitType = RAW;
 }
 
-void Controller::_UpdateArmThetas(){
-    theta1 = p_dynamixel->getPresentPosition(1, UNIT_RAW);
-    theta2 = p_dynamixel->getPresentPosition(2, UNIT_RAW);
-    theta3 = p_dynamixel->getPresentPosition(3, UNIT_RAW);
-}
 void Controller::_UpdateFingerThetas(){   
-    theta4 = p_dynamixel->getPresentPosition(4, UNIT_RAW);
-    theta5 = p_dynamixel->getPresentPosition(5, UNIT_RAW);
+    inputFingerThetas.m_Theta4 = p_dynamixel->getPresentPosition(4, UNIT_RAW);
+    inputFingerThetas.m_Theta5 = p_dynamixel->getPresentPosition(5, UNIT_RAW);
+    inputFingerThetas.currentUnitType = RAW;
+}
+
+void Controller::_ArmThetaConverter(UnitType unit){
+    inputArmThetas = _ThetaConverter(unit, inputArmThetas);
+}
+
+void Controller::_FingerThetaConverter(UnitType unit){
+    inputArmThetas = _ThetaConverter(unit, inputFingerThetas);
+}
+
+JointAngles Controller::_ThetaConverter(UnitType unit, JointAngles& r_JointAngles){
+    if(unit == r_JointAngles.currentUnitType){
+        return r_JointAngles;
+    }
+
+    JointAngles convertedThetas;
+    double conversion;
+
+    switch (unit)
+    {
+    case Degree:
+    {   
+        if(r_JointAngles.currentUnitType == RAW){
+            conversion = 360/4095; 
+            break;
+        }
+        if(r_JointAngles.currentUnitType == Radians){
+            conversion = RAD_TO_DEG;
+            break;
+        }
+    }
+
+    case Radians:
+    {
+        if (r_JointAngles.currentUnitType == RAW)
+        {
+            conversion = 2*M_PI/4095;
+            break;
+        }
+        if (r_JointAngles.currentUnitType == Degree)
+        {
+            conversion = DEG_TO_RAD;
+            break;
+        }
+    }
+
+    case RAW:
+    {
+        if (r_JointAngles.currentUnitType == Degree)
+        {
+            conversion = 4095/360;    
+            break;
+        }
+        if (r_JointAngles.currentUnitType == Radians)
+        {
+            conversion = 4095/2*M_PI;
+            break;
+        }
+    }
     
+    default:
+        DEBUG_SERIAL.print(F("Invalid conversion parameter"));
+    }
+
+    convertedThetas.m_Theta1 = r_JointAngles.m_Theta1*conversion;
+    convertedThetas.m_Theta2 = r_JointAngles.m_Theta2*conversion;
+    convertedThetas.m_Theta3 = r_JointAngles.m_Theta3*conversion;
+    convertedThetas.m_Theta4 = r_JointAngles.m_Theta4*conversion;
+    convertedThetas.m_Theta5 = r_JointAngles.m_Theta5*conversion;
+    convertedThetas.currentUnitType = unit;
+
+    return convertedThetas;
+}
+
+void Controller::_ForwardKinematics(){
+    _ArmThetaConverter(Radians);
+    m_eePosition.x = -cos(inputArmThetas.m_Theta1) * (m_Joint2.m_length * sin(inputArmThetas.m_Theta2) + m_Joint3.m_length * sin(inputArmThetas.m_Theta2 + inputArmThetas.m_Theta3));
+    m_eePosition.y = -sin(inputArmThetas.m_Theta1) * (m_Joint2.m_length * sin(inputArmThetas.m_Theta2) + m_Joint3.m_length * sin(inputArmThetas.m_Theta2 + inputArmThetas.m_Theta3));
+    m_eePosition.z = m_Joint1.m_length + m_Joint2.m_length * cos(inputArmThetas.m_Theta2) + m_Joint3.m_length * cos(inputArmThetas.m_Theta2 + inputArmThetas.m_Theta3);
+}
+
+void Controller::_InverseKinematics(eePosition eePos){
+    _ArmThetaConverter(Radians);
+    outputArmThetas.currentUnitType = inputArmThetas.currentUnitType;
+
+    // THETA1
+    // We calculate theta 1 and set it according to the joint constraints
+    outputArmThetas.m_Theta1 = atan2(eePos.y, eePos.x);
+    if(outputArmThetas.m_Theta1 > m_Joint1.m_maxTheta) { outputArmThetas.m_Theta1 = m_Joint1.m_maxTheta; }
+    if(outputArmThetas.m_Theta1 < m_Joint1.m_minTheta) { outputArmThetas.m_Theta1 = m_Joint1.m_minTheta; }
+
+
+    // THETA2
+    // We calculate the endeffector position w.r.t frame 1 in the x-z plane
+    double x1w = sqrt(pow(eePos.x,2)+pow(eePos.y,2));
+    double z1w = eePos.z - m_Joint1.m_length;
+
+    // 
+    m_elbowDown = (z1w < 0 && x1w > 30) ? true : false;    
+
+    // The we set sign used for the theta 2 and 3 calculation
+    double sign = m_elbowDown ? -1 : 1;
+
+    // Then calculate theta 2 according to the inverse kinematics formula for the robot
+    outputArmThetas.m_Theta2 = atan2(z1w, x1w) + sign*acos(
+            (pow(m_Joint2.m_length, 2)+pow(x1w, 2)+pow(z1w, 2)-pow(m_Joint3.m_length, 2)) /
+            (2*m_Joint2.m_length*sqrt(pow(x1w, 2)+pow(z1w, 2)))
+            ) - M_PI_2;
+    
+    // And then we set its contraints
+    //if(outputArmThetas.m_Theta2 > m_Joint2.m_maxTheta) { outputArmThetas.m_Theta2 = m_Joint2.m_maxTheta; }
+    //if(outputArmThetas.m_Theta2 < m_Joint2.m_minTheta) { outputArmThetas.m_Theta2 = m_Joint2.m_minTheta; }
+
+
+    // THETA3
+    // And then we calculate theta 3
+    outputArmThetas.m_Theta3 = -sign*(M_PI - acos(
+            (pow(m_Joint2.m_length, 2)+pow(m_Joint3.m_length, 2)-pow(x1w, 2)-pow(z1w, 2)) /
+            (2*m_Joint2.m_length*m_Joint3.m_length)
+            ));
+    
+    // And then we set its contraints
+    //if(outputArmThetas.m_Theta3 > m_Joint3.m_maxTheta) { outputArmThetas.m_Theta3 = m_Joint3.m_maxTheta; }
+    //if(outputArmThetas.m_Theta3 < m_Joint3.m_minTheta) { outputArmThetas.m_Theta3 = m_Joint3.m_minTheta; }
+    
+
+    DEBUG_SERIAL.print("x1w: ");
+    DEBUG_SERIAL.println(x1w);
+    DEBUG_SERIAL.print("z1w: ");
+    DEBUG_SERIAL.println(z1w);
+    DEBUG_SERIAL.print("Theta2 calculated (rad): ");
+    DEBUG_SERIAL.println(outputArmThetas.m_Theta2);
+    DEBUG_SERIAL.print("greater than: ");
+    DEBUG_SERIAL.println(((tan(M_PI_2-abs(outputArmThetas.m_Theta2)))*x1w));
+}
+
+double Controller::_PID(int currentValue, int desiredValue){
+    double Kp{1}, Ki{1}, Kd{1};
+
+    double error = desiredValue - currentValue;
+
+    m_proportional = Kp * error;
+    m_derivative   = Kd * ( error - m_lastError );
+
+    if(error < steadyStateError){
+        m_integral     = Ki * ( m_integral + error );
+    }
+    m_lastError = error;
+
+    return m_proportional + m_integral + m_derivative;
+}
+
+void Controller::PID_PWM(uint8_t id, int16_t desiredAngle){
+    if (id >= 1 && id <= 3){ _ArmThetaConverter(RAW); }
+    if (id > 3 && id <= 5) { _FingerThetaConverter(RAW); }
+
+    double PIDsum;
+    switch(id){
+        case 1: PIDsum = _PID(inputArmThetas.m_Theta1, desiredAngle);
+        case 2: PIDsum = _PID(inputArmThetas.m_Theta2, desiredAngle);
+        case 3: PIDsum = _PID(inputArmThetas.m_Theta3, desiredAngle);
+        case 4: PIDsum = _PID(inputFingerThetas.m_Theta4, desiredAngle);
+        case 5: PIDsum = _PID(inputFingerThetas.m_Theta5, desiredAngle);
+
+        default: PIDsum = 0;
+    }
+
+    int limit = p_dynamixel->readControlTableItem(ControlTableItem::PWM_LIMIT, id);
+
+    double PID_Value = abs(PIDsum) > limit ? copysign(limit, PIDsum) : PIDsum;
+
+    p_dynamixel->setGoalPWM(id, PID_Value, UNIT_RAW);
+    
+    if(PIDsum == 0){
+        m_proportional = 0;
+        m_integral = 0;   
+        m_derivative = 0;
+        m_lastError = 0;
+    }
 }
 
 void Controller::debugPrint(){
     _UpdateArmThetas();
+    
     _ForwardKinematics();
     DEBUG_SERIAL.print("eeX: ");
     DEBUG_SERIAL.println(m_eePosition.x);
@@ -66,127 +245,7 @@ void Controller::debugPrint(){
     DEBUG_SERIAL.println(m_eePosition.y);
     DEBUG_SERIAL.print("eeZ: ");
     DEBUG_SERIAL.println(m_eePosition.z);
-
-    DEBUG_SERIAL.print("Length 1: ");
-    DEBUG_SERIAL.println(m_Joints[1].m_length);
-    DEBUG_SERIAL.print("Length 2: ");
-    DEBUG_SERIAL.println(m_Joints[2].m_length);
-    DEBUG_SERIAL.print("Length 3: ");
-    DEBUG_SERIAL.println(m_Joints[3].m_length);
-    DEBUG_SERIAL.print("\n");
-    
-    /*
-    double presentPWM = p_dynamixel->readControlTableItem(ControlTableItem::PRESENT_PWM, 4);
-    DEBUG_SERIAL.print("Present PWM: ");
-    DEBUG_SERIAL.print(presentPWM);
-    DEBUG_SERIAL.print("\n");
-
-
-    _UpdateFingerThetas();
-    PID_PWM(4, 180, 2, 0.01, 2.5);
-    DEBUG_SERIAL.print("Error: ");
-    DEBUG_SERIAL.print(last_PID_error);
-    DEBUG_SERIAL.print("       PID: ");
-    DEBUG_SERIAL.print(PID_Value);
-    DEBUG_SERIAL.print("       Integral: ");
-    DEBUG_SERIAL.println(integral);  
-    DEBUG_SERIAL.print("\n");
-    */
+    DEBUG_SERIAL.print("\n");    
     
 }
 
-JointAngles Controller::_ThetaConverter(UnitType unit){
-    JointAngles thetas;
-    switch (unit)
-    {
-    case Degree:
-    {    
-        double conversion = 4095/360;
-        thetas.m_Theta1 = theta1/conversion;
-        thetas.m_Theta2 = theta2/conversion;
-        thetas.m_Theta3 = theta3/conversion;
-        thetas.m_Theta4 = theta4/conversion;
-        thetas.m_Theta5 = theta5/conversion;
-        break;
-    }
-    case Radians:
-    {
-        double conversion = 4095/360*M_PI/180;
-        thetas.m_Theta1 = theta1/conversion;
-        thetas.m_Theta2 = theta2/conversion;
-        thetas.m_Theta3 = theta3/conversion;
-        thetas.m_Theta4 = theta4/conversion;
-        thetas.m_Theta5 = theta5/conversion;
-        break;
-    }
-    
-    default:
-        DEBUG_SERIAL.print("Invalid conversion parameter");
-        break;
-    }
-    return thetas;
-}
-
-void Controller::_ForwardKinematics()
-{
-    JointAngles thetas = _ThetaConverter(Degree);
-    m_eePosition.x = -cos(thetas.m_Theta1) * (m_Joints[3].m_length * sin(thetas.m_Theta2 + thetas.m_Theta3) + m_Joints[2].m_length * sin(thetas.m_Theta2));
-    m_eePosition.y = -sin(thetas.m_Theta1) * (m_Joints[3].m_length * sin(thetas.m_Theta2 + thetas.m_Theta3) + m_Joints[2].m_length * sin(thetas.m_Theta2));
-    m_eePosition.z = m_Joints[2].m_length + m_Joints[3].m_length * cos(thetas.m_Theta2 + thetas.m_Theta3) + m_Joints[2].m_length * cos(thetas.m_Theta2);
-
-    /*
-    m_eePosition.x = -cos(theta1) * (l3 * sin(theta2 + theta3) + l2 * sin(theta2));
-    m_eePosition.y = -sin(theta1) * (l3 * sin(theta2 + theta3) + l2 * sin(theta2));
-    m_eePosition.z = l1 + l3 * cos(theta2 + theta3) + l2 * cos(theta2);
-    */
-}
-
-void Controller::PID_PWM(uint8_t id, int16_t desired_angle, double Kp, double Ki, double Kd){
-    PerformanceTester tester(&DEBUG_SERIAL, "PID function");
-    switch (id)
-    {
-        case 1:
-        {
-            PID_error = desired_angle - theta1;
-            break;
-        }
-        case 2:
-        {
-            PID_error = desired_angle - theta2;
-            break;
-        }
-        case 3:
-        {
-            PID_error = desired_angle - theta3;
-            break;
-        }
-        case 4: 
-        {
-            PID_error = desired_angle - theta4;
-            break;
-        }
-        case 5: 
-        {
-            PID_error = desired_angle - theta5;
-            break;
-        }
-        default:
-        {
-            DEBUG_SERIAL.print("Invalid ID call");
-            break;
-        }
-    }
-
-    proportional = Kp * PID_error;
-    integral = (integral + PID_error) * Ki;
-    derivative = (PID_error - last_PID_error) * Kd;
-
-    last_PID_error = PID_error;
-
-    double sum = proportional + integral + derivative;
-    int limit = p_dynamixel->readControlTableItem(ControlTableItem::PWM_LIMIT, id);
-
-    PID_Value = abs(sum) > limit ? copysign(limit, sum) : sum;
-
-    p_dynamixel->setGoalPWM(id, PID_Value, UNIT_RAW);
-}
